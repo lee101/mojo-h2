@@ -1,0 +1,23 @@
+[project]
+name = "mojo-h2"
+version = "0.1.0"
+description = "HTTP/2 framing and HPACK kernels implemented in Mojo"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Lee Penkman", email = "leepenkman@gmail.com" }]
+keywords = ["mojo", "http2", "hpack", "h2"]
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+dev = ["pytest", "h2>=4.2,<5", "hpack>=4.2,<5", "hyperframe>=6.1,<7"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "python" }
+
+[tool.setuptools.packages.find]
+where = ["python"]
