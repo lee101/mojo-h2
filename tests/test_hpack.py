@@ -131,6 +131,23 @@ def test_encoder_is_byte_identical_to_upstream_across_dynamic_blocks(
         )
 
 
+def test_repeated_newest_dynamic_match_stays_byte_identical_to_upstream():
+    headers = [
+        (b":method", b"GET"),
+        (b":scheme", b"https"),
+        (b"accept", b"*/*"),
+    ]
+    ours = Encoder()
+    upstream = hpack.Encoder()
+    for _ in range(4):
+        assert ours.encode(headers) == upstream.encode(headers)
+
+
+def test_plain_tuple_sensitive_flag_stays_byte_identical_to_upstream():
+    headers = [(b"x-secret", b"value", True)]
+    assert Encoder().encode(headers) == hpack.Encoder().encode(headers)
+
+
 def test_random_header_blocks_match_upstream_both_directions():
     rng = random.Random(7)
     names = ["x-id", "x-token", "cache-control", "content-type", "user-agent"]

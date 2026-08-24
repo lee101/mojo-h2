@@ -95,13 +95,13 @@ times from the complete locked run.
 
 | case | mojo-h2 | upstream | upstream / Mojo |
 | --- | ---: | ---: | ---: |
-| Huffman encode, 128 KiB | 0.45 ms | 2809.98 ms | 6239.39x faster |
-| Huffman decode, 106 KiB | 4.30 ms | 63.60 ms | 14.78x faster |
-| HPACK encode, one 128 KiB value | 0.53 ms | 2474.97 ms | 4671.39x faster |
-| HPACK encode, 10k indexed blocks | 41.45 ms | 90.25 ms | 2.18x faster |
-| Frame-header encode, 250k | 1.64 ms | 201.46 ms | 123.15x faster |
-| Frame-header decode, 250k | 1.33 ms | 673.98 ms | 505.69x faster |
-| DATA serialize, 10k scalar | 17.50 ms | 41.80 ms | 2.39x faster |
+| Huffman encode, 128 KiB | 0.46 ms | 2534.72 ms | 5471.58x faster |
+| Huffman decode, 106 KiB | 2.48 ms | 35.74 ms | 14.43x faster |
+| HPACK encode, one 128 KiB value | 1.01 ms | 2731.07 ms | 2710.57x faster |
+| HPACK encode, 10k indexed blocks | 30.78 ms | 92.07 ms | 2.99x faster |
+| Frame-header encode, 250k | 1.69 ms | 185.68 ms | 109.99x faster |
+| Frame-header decode, 250k | 0.94 ms | 570.56 ms | 608.41x faster |
+| DATA serialize, 10k scalar | 13.31 ms | 25.70 ms | 1.93x faster |
 
 The very large encode ratios are real but specific. Upstream `hpack` builds a
 literal's complete Huffman bitstream as one ever-growing Python integer, so a
@@ -110,8 +110,10 @@ Normal headers are much smaller, so the absolute saving per value is smaller.
 
 An indexed HPACK field is only one or a few bytes, and a scalar DATA header is
 nine bytes. These paths use direct table lookups and scalar packing so they do
-not pay for NumPy setup or a ctypes crossing. The batch frame-header API still
-uses Mojo, where that fixed cost is amortized across the input.
+not pay for NumPy setup or a ctypes crossing. Static indexed fields bypass the
+generic dynamic-table search, while unflagged DATA frames bypass generic flag
+serialization. The batch frame-header API still uses Mojo, where that fixed
+cost is amortized across the input.
 
 No GPU path is included. Frame packing and Huffman sizing are bandwidth-bound,
 Huffman bit packing is serial within a string, and Huffman tree traversal is

@@ -130,6 +130,10 @@ class HeaderTable:
             (static_name, name, None) if static_name is not None else None
         )
         offset = self.STATIC_TABLE_LENGTH + 1
+        if self.dynamic_entries:
+            candidate_name, candidate_value = self.dynamic_entries[0]
+            if candidate_name == name and candidate_value == value:
+                return offset, name, value
         for index, (candidate_name, candidate_value) in enumerate(
             self.dynamic_entries, offset
         ):
@@ -190,6 +194,16 @@ class Encoder:
             items = iter(headers)
 
         for header in items:
+            name = header[0]
+            if type(name) is not bytes:
+                name = _to_bytes(name)
+            value = header[1]
+            if type(value) is not bytes:
+                value = _to_bytes(value)
+            static_index = _STATIC_EXACT.get((name, value))
+            if static_index is not None:
+                pieces.append(_ONE_BYTE_INDEXED[static_index])
+                continue
             sensitive = False
             if isinstance(header, HeaderTuple):
                 sensitive = not header.indexable
@@ -197,7 +211,7 @@ class Encoder:
                 sensitive = bool(header[2])
             pieces.append(
                 self.add(
-                    (_to_bytes(header[0]), _to_bytes(header[1])),
+                    (name, value),
                     sensitive,
                     huffman,
                 )

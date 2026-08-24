@@ -196,6 +196,19 @@ class DataFrame(Frame):
             return data
         return bytes([self.pad_length]) + data + b"\0" * self.pad_length
 
+    def serialize(self) -> bytes:
+        if self.flags:
+            return super().serialize()
+        body = self.data.tobytes() if isinstance(self.data, memoryview) else self.data
+        self.body_len = len(body)
+        return _FRAME_HEADER.pack(
+            (self.body_len >> 8) & 0xFFFF,
+            self.body_len & 0xFF,
+            self.type,
+            0,
+            self.stream_id & 0x7FFFFFFF,
+        ) + body
+
     def parse_body(self, data: memoryview) -> None:
         offset = _padding(self, data)
         self.body_len = len(data)

@@ -110,6 +110,14 @@ def test_data_flow_controlled_length():
     assert padded.flow_controlled_length == 9
 
 
+def test_plain_data_memoryview_serialization_updates_body_length():
+    payload = memoryview(b"abcdef")[1:5]
+    ours = frame.DataFrame(3, payload)
+    upstream = reference.DataFrame(3, payload)
+    assert ours.serialize() == upstream.serialize()
+    assert ours.body_len == upstream.body_len == len(payload)
+
+
 @pytest.mark.parametrize("size", [0, 1, 255, 256, 65535, 65536])
 def test_scalar_data_header_length_boundaries(size):
     payload = b"x" * size
